@@ -1,17 +1,25 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/wSanice/leblanc/refs/heads/main/assets/leblanc.png" alt="Leblanc Banner" width="100%"/>
+  <img src="https://raw.githubusercontent.com/duck-stein/leblanc/refs/heads/main/assets/leblanc.png" alt="Leblanc Banner" width="100%"/>
 </p>
 
-# leblanc: Sectorial Synthetic Data Generator 
+# leblanc: Sectorial Synthetic Data Generator
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/leblanc?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=RED&left_text=downloads)](https://pepy.tech/projects/leblanc)
+
 ## I. Overview
 
-**leblanc** is a modular Python library designed for Data Scientists to rapidly generate large-scale synthetic datasets across various business sectors. Built on top of **Pandas**, **NumPy**, and **Faker**, it creates realistic, structured DataFrames suitable for training, testing, and Exploratory Data Analysis (EDA).
+**leblanc** is a modular Python library designed for Data Scientists to rapidly generate large-scale synthetic datasets across various business sectors. Built on top of **Pandas**, **NumPy** and **Faker**, it creates realistic, structured DataFrames suitable for training, testing and Exploratory Data Analysis (EDA).
 
-**New in v0.6.3:**
-* **Object-Oriented Design:** Use Classes for better control.
-* **Internationalization (i18n):** Native support for Brazilian Portuguese (`pt_BR`).
-* **Data Cleaning Practice:** Native support for injecting missing values (`NaN`).
+**What is new in v0.9.0:**
+* **Reproducible builds:** every instance owns its random generators, so calling `.build()` twice, or creating two instances with the same seed, returns the same DataFrame.
+* **Missing values fixed:** injection now works on every column type, including booleans and integers, and accepts a `missing_rate`.
+* **Dirty data tools:** `outlier_cols` and `duplicate_rate` join the missing value injection.
+* **Export:** `export(df, "file.csv")` writes CSV, Parquet or JSON.
+* **Command line:** `leblanc agribusiness -n 1000 -o data.csv`.
+* **Custom start date:** `start_date="2024-01-01"`, plus `verbose=False` to silence the log.
+* **Registry:** `list_sectors()` and `get_sector("forestry")`.
+* **Data fixes:** Food totals now equal price times quantity, Forestry volume and revenue are coherent, dates are chronological and stay inside one year, Financial clients repeat across records and checking accounts no longer default.
+* **Validation:** unknown columns, invalid rates and invalid record counts raise a clear `ValueError`.
+* **Tests:** a pytest suite runs on Python 3.9 to 3.13.
 
 ### Supported Sectors (Classes)
 
@@ -23,64 +31,114 @@
 | `Financial` | Financial Transactions | Interest Rate, Client Risk Level, Default Flag |
 | `HealthBeauty` | Health & Beauty Sales/Services | Recurrence Days, Sales Channel |
 | `Agribusiness` | Agribusiness Records | Climate Condition, Area (Ha), Production Yield |
-| `Forestry` | Forestry Inventory/Harvest | Planting Age, Management Type, Total Volume ($m^3$) |
+| `Forestry` | Forestry Inventory/Harvest | Planting Age, Management Type, Total Volume |
 
 ---
 
 ## II. Installation
 
-leblanc is available on PyPI. Use `pip` to install the latest stable version:
-
 ```bash
 pip install leblanc
 ```
+
+Parquet export needs `pyarrow`:
+
+```bash
+pip install "leblanc[parquet]"
+```
+
 ## III. Usage Example
-### 1. Basic Usage (English - Default)
-The library now uses classes with a standard `.build()` method.
+
+### 1. Basic Usage
 
 ```python
-import pandas as pd
 from leblanc import Tech, Agribusiness
 
-# 1. Generate Technology Sales Data
-# Uses seed=42 by default for reproducibility
 df_tech = Tech(num_records=1000).build()
+df_agro = Agribusiness(num_records=500, seed=7).build()
 
-print("--- Technology Data Sample ---")
 print(df_tech.head())
-
-# 2. Generate Agribusiness Records
-df_agro = Agribusiness(num_records=500).build()
-
 ```
-### 2. Brazilian Portuguese Support (pt_BR) 🇧🇷
 
-You can generate data localized for Brazil (translated products, categories, and regions) by passing the `locale` parameter.
+### 2. Brazilian Portuguese Support (pt_BR)
 
 ```python
 from leblanc import Food
 
-# Generates data with 'Leite', 'Café', 'Açougue', etc.
 df_food_br = Food(num_records=100, locale='pt_BR').build()
-
 print(df_food_br.head())
 ```
 
-### 3. Data Cleaning Practice (Injecting Nulls) 
+### 3. Missing Values
 
-Perfect for teaching or testing how models handle missing data. You can inject `NaN` values into specific columns.
+Works on every column type. Choose the share of missing cells with `missing_rate`.
+
 ```python
 from leblanc import Financial
 
-# Simulates a dirty dataset where 'contracted_value' has missing data
-df_fin = Financial(num_records=1000).build(missing_data_cols=['contracted_value'])
+df = Financial(num_records=1000).build(
+    missing_data_cols=['contracted_value', 'is_default'],
+    missing_rate=0.1,
+)
+print(df[['contracted_value', 'is_default']].isnull().sum())
+```
 
-print(f"Missing values generated: {df_fin['contracted_value'].isnull().sum()}")
+### 4. Outliers and Duplicates
+
+```python
+from leblanc import Tech
+
+df = Tech(num_records=2000).build(
+    outlier_cols=['total_sale'],
+    duplicate_rate=0.03,
+)
+print(df.duplicated().sum())
+```
+
+### 5. Reproducibility and Start Date
+
+```python
+from leblanc import Forestry
+
+generator = Forestry(num_records=300, seed=11, start_date="2024-01-01")
+first = generator.build()
+second = generator.build()
+print(first.equals(second))
+```
+
+### 6. Export
+
+```python
+from leblanc import Apparel
+
+generator = Apparel(num_records=500)
+df = generator.build()
+generator.export(df, "apparel.csv")
+generator.export(df, "apparel.parquet")
+generator.export(df, "apparel.json")
+```
+
+### 7. Sector Registry
+
+```python
+from leblanc import list_sectors, get_sector
+
+print(list_sectors())
+Sector = get_sector("health_beauty")
+df = Sector(num_records=100, verbose=False).build()
+```
+
+### 8. Command Line
+
+```bash
+leblanc forestry -n 5000 -o forestry.csv
+leblanc financial -n 2000 -o fin.parquet --locale pt_BR --missing contracted_value --missing-rate 0.1
+leblanc tech -n 1000 -o tech.json --outliers total_sale --duplicates 0.02 --start-date 2024-01-01
 ```
 
 ## IV. License
 
-This project is licensed under the Apache License, Version 2.0. See the [LICENSE](https://www.apache.org/licenses/LICENSE-2.0)  for details.
+This project is licensed under the Apache License, Version 2.0. See the [LICENSE](https://www.apache.org/licenses/LICENSE-2.0) for details.
 
 <br><br><br><br>
 
@@ -88,16 +146,19 @@ This project is licensed under the Apache License, Version 2.0. See the [LICENSE
 
 ## I. Visão Geral
 
-**leblanc** é uma biblioteca Python modular projetada para a geração rápida de conjuntos de dados sintéticos de grande escala. É construída utilizando **Pandas**, **NumPy** e **Faker** para criar DataFrames estruturados e realistas, adequados para treinamento em Data Science, testes e análise exploratória de dados (EDA).
+**leblanc** é uma biblioteca Python modular projetada para a geração rápida de conjuntos de dados sintéticos de grande escala. É construída com **Pandas**, **NumPy** e **Faker** para criar DataFrames estruturados e realistas, adequados para treinamento em Data Science, testes e análise exploratória de dados (EDA).
 
-
-**Novidades na v0.6.3:**
-
-**Design Orientado a Objetos:** Uso de Classes para maior controle.
-
-**Internacionalização (i18n):** Suporte nativo para Português do Brasil (`pt_BR`).
-
-**Prática de Limpeza de Dados:** Suporte nativo para injeção de valores nulos (`NaN`).
+**Novidades na v0.9.0:**
+* **Geração reproduzível:** cada instância tem seus próprios geradores aleatórios, então chamar `.build()` duas vezes, ou criar duas instâncias com a mesma semente, devolve o mesmo DataFrame.
+* **Valores nulos corrigidos:** a injeção funciona em qualquer tipo de coluna, inclusive booleanas e inteiras, e aceita `missing_rate`.
+* **Ferramentas de dados sujos:** `outlier_cols` e `duplicate_rate` somam-se à injeção de nulos.
+* **Exportação:** `export(df, "arquivo.csv")` grava CSV, Parquet ou JSON.
+* **Linha de comando:** `leblanc agribusiness -n 1000 -o dados.csv`.
+* **Data inicial personalizada:** `start_date="2024-01-01"`, e `verbose=False` para silenciar o log.
+* **Registro de setores:** `list_sectors()` e `get_sector("forestry")`.
+* **Correções nos dados:** o total de Food agora é preço vezes quantidade, volume e receita de Forestry são coerentes, as datas são cronológicas e ficam dentro de um ano, os clientes de Financial se repetem e conta corrente não tem mais inadimplência.
+* **Validação:** colunas desconhecidas, taxas inválidas e quantidade de registros inválida geram um `ValueError` claro.
+* **Testes:** uma suíte pytest roda no Python 3.9 a 3.13.
 
 ### Setores Suportados (Classes)
 
@@ -109,58 +170,109 @@ This project is licensed under the Apache License, Version 2.0. See the [LICENSE
 | `Financial` | Transações Financeiras | Taxa de Juros, Nível de Risco do Cliente, Flag de Inadimplência |
 | `HealthBeauty` | Vendas/Serviços de Saúde e Beleza | Dias de Recorrência, Canal de Vendas |
 | `Agribusiness` | Registros de Agronegócios | Condição Climática, Área (Ha), Produtividade |
-| `Forestry` | Inventário/Colheita Florestal | Idade do Plantio, Tipo de Manejo, Volume Total (m³) |
+| `Forestry` | Inventário/Colheita Florestal | Idade do Plantio, Tipo de Manejo, Volume Total |
 
 ## II. Instalação
-
-leblanc está disponível no PyPI. Use o `pip` para instalar a versão estável mais recente:
 
 ```bash
 pip install leblanc
 ```
 
-## III. Exemplos de Uso
-### 1. Uso Básico (Padrão)
+Para exportar em Parquet é preciso o `pyarrow`:
 
-A biblioteca agora utiliza classes com um método padronizado `.build()`.
+```bash
+pip install "leblanc[parquet]"
+```
+
+## III. Exemplos de Uso
+
+### 1. Uso Básico
 
 ```python
-import pandas as pd
 from leblanc import Tech, Agribusiness
 
-# 1. Gera Dados de Vendas de Tecnologia
-# Usa seed=42 por padrão para reprodutibilidade
 df_tech = Tech(num_records=1000).build()
+df_agro = Agribusiness(num_records=500, seed=7).build()
 
-print("--- Amostra de Dados de Tecnologia ---")
 print(df_tech.head())
 ```
-### 2. Suporte a Português (pt_BR) 🇧🇷
 
-Você pode gerar dados localizados para o Brasil (produtos, categorias e regiões traduzidas) passando o parâmetro `locale`.
+### 2. Suporte a Português (pt_BR)
 
 ```python
 from leblanc import Food
 
-# Gera dados com 'Leite', 'Café', 'Açougue', etc.
 df_food_br = Food(num_records=100, locale='pt_BR').build()
-
 print(df_food_br.head())
 ```
-### 3. Prática de Limpeza de Dados (Injeção de Nulos)
-Perfeito para estudo de como modelos lidam com dados faltantes. 
-Você pode injetar valores `NaN` em colunas específicas.
+
+### 3. Valores Nulos
+
+Funciona em qualquer tipo de coluna. Defina a proporção de células vazias com `missing_rate`.
+
 ```python
 from leblanc import Financial
 
-# Simula um dataset "sujo" onde 'contracted_value' possui dados faltantes
-df_fin = Financial(num_records=1000).build(missing_data_cols=['contracted_value'])
-
-print(f"Valores nulos gerados: {df_fin['contracted_value'].isnull().sum()}")
+df = Financial(num_records=1000).build(
+    missing_data_cols=['contracted_value', 'is_default'],
+    missing_rate=0.1,
+)
+print(df[['contracted_value', 'is_default']].isnull().sum())
 ```
 
+### 4. Outliers e Duplicatas
+
+```python
+from leblanc import Tech
+
+df = Tech(num_records=2000).build(
+    outlier_cols=['total_sale'],
+    duplicate_rate=0.03,
+)
+print(df.duplicated().sum())
+```
+
+### 5. Reprodutibilidade e Data Inicial
+
+```python
+from leblanc import Forestry
+
+generator = Forestry(num_records=300, seed=11, start_date="2024-01-01")
+first = generator.build()
+second = generator.build()
+print(first.equals(second))
+```
+
+### 6. Exportação
+
+```python
+from leblanc import Apparel
+
+generator = Apparel(num_records=500)
+df = generator.build()
+generator.export(df, "apparel.csv")
+generator.export(df, "apparel.parquet")
+generator.export(df, "apparel.json")
+```
+
+### 7. Registro de Setores
+
+```python
+from leblanc import list_sectors, get_sector
+
+print(list_sectors())
+Sector = get_sector("health_beauty")
+df = Sector(num_records=100, verbose=False).build()
+```
+
+### 8. Linha de Comando
+
+```bash
+leblanc forestry -n 5000 -o forestry.csv
+leblanc financial -n 2000 -o fin.parquet --locale pt_BR --missing contracted_value --missing-rate 0.1
+leblanc tech -n 1000 -o tech.json --outliers total_sale --duplicates 0.02 --start-date 2024-01-01
+```
 
 ## IV. Licença
 
-Este projeto está licenciado sob a Apache License, Version 2.0. Consulte a [LICENSE](https://www.apache.org/licenses/LICENSE-2.0)
- para obter detalhes.
+Este projeto está licenciado sob a Apache License, Version 2.0. Consulte a [LICENSE](https://www.apache.org/licenses/LICENSE-2.0).

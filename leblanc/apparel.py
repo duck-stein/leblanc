@@ -13,12 +13,11 @@
 # limitations under the License.
 
 from .base import Leblanc
-from datetime import datetime, timedelta
-import numpy as np
-import random
+from datetime import datetime
+
 
 class Apparel(Leblanc):
-    
+
     PRODUCTS_APPAREL = {
         'Slim Fit Jeans': {'category': 'Bottom Wear', 'price': 180.00},
         'Basic Cotton T-Shirt': {'category': 'Top Wear', 'price': 60.00},
@@ -43,38 +42,36 @@ class Apparel(Leblanc):
     def get_metadata(self):
         return {"description": "Apparel and Fashion sales data"}
 
-    def build(self, missing_data_cols=None):
+    def build(self, missing_data_cols=None, missing_rate=0.05, outlier_cols=None, duplicate_rate=0.0):
+        self._reset()
         sales_data = []
         product_list = list(self.PRODUCTS_APPAREL.keys())
-        start_date = datetime(2025, 9, 1)
         translator = self.TRANSLATIONS.get(self.locale, {})
+        dates = self._timeline(self._start(datetime(2025, 9, 1)))
 
         for i in range(self.num_records):
-            raw_prod = random.choice(product_list)
-            raw_color = random.choice(self.COLORS)
+            raw_prod = self.py_rng.choice(product_list)
+            raw_color = self.py_rng.choice(self.COLORS)
             info = self.PRODUCTS_APPAREL[raw_prod]
-            order_date = start_date + timedelta(days=i * random.uniform(0.5, 1.5))
-            quantity = np.random.randint(1, 10) if order_date.month in [10, 11, 12] else np.random.randint(1, 5)
-            unit_price = info['price'] * np.random.uniform(0.9, 1.1)
-            product_name = translator.get(raw_prod, raw_prod)
-            category = translator.get(info['category'], info['category'])
-            color = translator.get(raw_color, raw_color)
+            order_date = dates[i]
+            if order_date.month in [10, 11, 12]:
+                quantity = int(self.rng.integers(1, 10))
+            else:
+                quantity = int(self.rng.integers(1, 5))
+            unit_price = round(float(info['price'] * self.rng.uniform(0.9, 1.1)), 2)
 
             sales_data.append({
                 'transaction_id': 3000 + i,
                 'transaction_date': order_date,
-                'product': product_name,
-                'category': category,
-                'unit_price': round(unit_price, 2),
+                'product': translator.get(raw_prod, raw_prod),
+                'category': translator.get(info['category'], info['category']),
+                'unit_price': unit_price,
                 'quantity': quantity,
                 'total_sale': round(unit_price * quantity, 2),
-                'size': random.choice(self.SIZES),
-                'color': color,
-                'customer_id': np.random.randint(100, 9999),
-                'return_flag': np.random.choice([True, False], p=[0.15, 0.85])
+                'size': self.py_rng.choice(self.SIZES),
+                'color': translator.get(raw_color, raw_color),
+                'customer_id': int(self.rng.integers(100, 9999)),
+                'return_flag': bool(self.rng.random() < 0.15)
             })
 
-        df = self._create_dataframe(sales_data, "Apparel & Fashion")
-        if missing_data_cols:
-            df = self.inject_missing_values(df, missing_data_cols)
-        return df
+        return self._finalize(sales_data, "Apparel & Fashion", missing_data_cols, missing_rate, outlier_cols, duplicate_rate)
