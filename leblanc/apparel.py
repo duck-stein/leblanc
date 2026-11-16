@@ -36,8 +36,61 @@ class Apparel(Leblanc):
             'Casual Running Shoes': 'Tênis de Corrida Casual', 'Summer Midi Dress': 'Vestido Midi de Verão',
             'Dress Socks (Pair)': 'Meias Sociais (Par)',
             'Black': 'Preto', 'White': 'Branco', 'Navy Blue': 'Azul Marinho', 'Grey': 'Cinza', 'Red': 'Vermelho'
+        },
+        'es_ES': {
+            'Bottom Wear': 'Parte Inferior',
+            'Top Wear': 'Parte Superior',
+            'Footwear': 'Calzado',
+            'Womenswear': 'Moda Mujer',
+            'Accessories': 'Accesorios',
+            'Slim Fit Jeans': 'Vaqueros Slim',
+            'Basic Cotton T-Shirt': 'Camiseta Básica de Algodón',
+            'Casual Running Shoes': 'Zapatillas Casuales de Correr',
+            'Summer Midi Dress': 'Vestido Midi de Verano',
+            'Dress Socks (Pair)': 'Calcetines de Vestir (Par)',
+            'Black': 'Negro',
+            'White': 'Blanco',
+            'Navy Blue': 'Azul Marino',
+            'Grey': 'Gris',
+            'Red': 'Rojo'
+        },
+        'hi_IN': {
+            'Bottom Wear': 'निचले वस्त्र',
+            'Top Wear': 'ऊपरी वस्त्र',
+            'Footwear': 'जूते',
+            'Womenswear': 'महिला परिधान',
+            'Accessories': 'एक्सेसरीज़',
+            'Slim Fit Jeans': 'स्लिम फ़िट जींस',
+            'Basic Cotton T-Shirt': 'बेसिक कॉटन टी-शर्ट',
+            'Casual Running Shoes': 'कैज़ुअल रनिंग शूज़',
+            'Summer Midi Dress': 'समर मिडी ड्रेस',
+            'Dress Socks (Pair)': 'फ़ॉर्मल मोज़े (जोड़ी)',
+            'Black': 'काला',
+            'White': 'सफ़ेद',
+            'Navy Blue': 'नेवी ब्लू',
+            'Grey': 'स्लेटी',
+            'Red': 'लाल'
+        },
+        'zh_CN': {
+            'Bottom Wear': '下装',
+            'Top Wear': '上装',
+            'Footwear': '鞋类',
+            'Womenswear': '女装',
+            'Accessories': '配饰',
+            'Slim Fit Jeans': '修身牛仔裤',
+            'Basic Cotton T-Shirt': '基础款纯棉T恤',
+            'Casual Running Shoes': '休闲跑鞋',
+            'Summer Midi Dress': '夏季中长连衣裙',
+            'Dress Socks (Pair)': '正装袜(双)',
+            'Black': '黑色',
+            'White': '白色',
+            'Navy Blue': '藏青色',
+            'Grey': '灰色',
+            'Red': '红色'
         }
     }
+
+    SEASONALITY = [0.9, 0.8, 0.9, 1.0, 1.1, 1.0, 1.0, 0.9, 1.0, 1.1, 1.5, 1.7]
 
     def get_metadata(self):
         return {"description": "Apparel and Fashion sales data"}
@@ -46,7 +99,7 @@ class Apparel(Leblanc):
         self._reset()
         sales_data = []
         product_list = list(self.PRODUCTS_APPAREL.keys())
-        translator = self.TRANSLATIONS.get(self.locale, {})
+        translator = self._translator()
         dates = self._timeline(self._start(datetime(2025, 9, 1)))
 
         for i in range(self.num_records):

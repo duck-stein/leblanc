@@ -36,8 +36,52 @@ class Tech(Leblanc):
             'Mechanical Keyboard': 'Teclado Mecânico', 'Ultrawide Monitor': 'Monitor Ultrawide',
             'Gaming Chair': 'Cadeira Gamer', 'Headset 7.1': 'Fone de Ouvido 7.1',
             'Video Card': 'Placa de Vídeo'
+        },
+        'es_ES': {
+            'Electronics': 'Electrónica',
+            'Accessories': 'Accesorios',
+            'Furniture': 'Mobiliario',
+            'Hardware': 'Hardware',
+            'Gaming Laptop': 'Portátil Gamer',
+            'Vertical Mouse': 'Ratón Vertical',
+            'Mechanical Keyboard': 'Teclado Mecánico',
+            'Ultrawide Monitor': 'Monitor Ultrapanorámico',
+            'Gaming Chair': 'Silla Gamer',
+            'Headset 7.1': 'Auriculares 7.1',
+            'Video Card': 'Tarjeta Gráfica',
+            'SSD 1TB': 'SSD 1TB'
+        },
+        'hi_IN': {
+            'Electronics': 'इलेक्ट्रॉनिक्स',
+            'Accessories': 'एक्सेसरीज़',
+            'Furniture': 'फ़र्नीचर',
+            'Hardware': 'हार्डवेयर',
+            'Gaming Laptop': 'गेमिंग लैपटॉप',
+            'Vertical Mouse': 'वर्टिकल माउस',
+            'Mechanical Keyboard': 'मैकेनिकल कीबोर्ड',
+            'Ultrawide Monitor': 'अल्ट्रावाइड मॉनिटर',
+            'Gaming Chair': 'गेमिंग चेयर',
+            'Headset 7.1': 'हेडसेट 7.1',
+            'Video Card': 'वीडियो कार्ड',
+            'SSD 1TB': 'SSD 1TB'
+        },
+        'zh_CN': {
+            'Electronics': '电子产品',
+            'Accessories': '配件',
+            'Furniture': '家具',
+            'Hardware': '硬件',
+            'Gaming Laptop': '游戏笔记本',
+            'Vertical Mouse': '垂直鼠标',
+            'Mechanical Keyboard': '机械键盘',
+            'Ultrawide Monitor': '超宽显示器',
+            'Gaming Chair': '电竞椅',
+            'Headset 7.1': '7.1耳机',
+            'Video Card': '显卡',
+            'SSD 1TB': '1TB固态硬盘'
         }
     }
+
+    SEASONALITY = [0.9, 0.8, 0.9, 0.9, 1.0, 1.0, 1.0, 1.1, 1.0, 1.1, 1.6, 1.8]
 
     def get_metadata(self):
         return {
@@ -49,7 +93,7 @@ class Tech(Leblanc):
         self._reset()
         sales_data = []
         product_list = list(self.PRODUCTS_TECH.keys())
-        translator = self.TRANSLATIONS.get(self.locale, {})
+        translator = self._translator()
         dates = self._timeline(self._start(datetime(2026, 1, 1)))
 
         for i in range(self.num_records):
@@ -72,7 +116,7 @@ class Tech(Leblanc):
                 'total_sale': round(unit_price * quantity, 2),
                 'customer_id': int(self.rng.integers(100, 9999)),
                 'city': self.fake.city(),
-                'state': self.fake.state_abbr()
+                'state': self._state()
             })
 
         return self._finalize(sales_data, "Technology Sales", missing_data_cols, missing_rate, outlier_cols, duplicate_rate)

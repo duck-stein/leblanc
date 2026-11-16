@@ -34,8 +34,68 @@ class Agribusiness(Leblanc):
             'Grain': 'Grão', 'Permanent Crop': 'Cultura Perene', 'Livestock': 'Pecuária', 'Input': 'Insumo',
             'Ideal': 'Ideal', 'Normal': 'Normal', 'Drought': 'Seca', 'Excess Rain': 'Chuva Excessiva',
             'Midwest': 'Centro-Oeste', 'South': 'Sul', 'Southeast': 'Sudeste', 'Northeast': 'Nordeste'
+        },
+        'es_ES': {
+            'Soybean': 'Soja',
+            'Corn': 'Maíz',
+            'Coffee': 'Café',
+            'Beef Cattle': 'Ganado Bovino',
+            'Fertilizer NPK': 'Fertilizante NPK',
+            'Grain': 'Grano',
+            'Permanent Crop': 'Cultivo Perenne',
+            'Livestock': 'Ganadería',
+            'Input': 'Insumo',
+            'Ideal': 'Ideal',
+            'Normal': 'Normal',
+            'Drought': 'Sequía',
+            'Excess Rain': 'Exceso de Lluvia',
+            'Midwest': 'Centro-Oeste',
+            'South': 'Sur',
+            'Southeast': 'Sureste',
+            'Northeast': 'Noreste'
+        },
+        'hi_IN': {
+            'Soybean': 'सोयाबीन',
+            'Corn': 'मक्का',
+            'Coffee': 'कॉफ़ी',
+            'Beef Cattle': 'मवेशी (गोवंश)',
+            'Fertilizer NPK': 'NPK उर्वरक',
+            'Grain': 'अनाज',
+            'Permanent Crop': 'बारहमासी फ़सल',
+            'Livestock': 'पशुपालन',
+            'Input': 'इनपुट',
+            'Ideal': 'आदर्श',
+            'Normal': 'सामान्य',
+            'Drought': 'सूखा',
+            'Excess Rain': 'अत्यधिक वर्षा',
+            'Midwest': 'मध्य-पश्चिम',
+            'South': 'दक्षिण',
+            'Southeast': 'दक्षिण-पूर्व',
+            'Northeast': 'उत्तर-पूर्व'
+        },
+        'zh_CN': {
+            'Soybean': '大豆',
+            'Corn': '玉米',
+            'Coffee': '咖啡',
+            'Beef Cattle': '肉牛',
+            'Fertilizer NPK': 'NPK肥料',
+            'Grain': '谷物',
+            'Permanent Crop': '多年生作物',
+            'Livestock': '畜牧业',
+            'Input': '农业投入品',
+            'Ideal': '理想',
+            'Normal': '正常',
+            'Drought': '干旱',
+            'Excess Rain': '降雨过多',
+            'Midwest': '中西部',
+            'South': '南部',
+            'Southeast': '东南部',
+            'Northeast': '东北部'
         }
     }
+
+    SEASONALITY = [1.0, 1.2, 1.6, 1.6, 1.3, 1.0, 0.8, 0.7, 0.7, 0.8, 0.9, 1.0]
+    CUSTOMER_NAME = 'farm_owner'
 
     def get_metadata(self):
         return {
@@ -47,7 +107,7 @@ class Agribusiness(Leblanc):
         self._reset()
         agri_data = []
         crop_list = list(self.CROPS_INFO.keys())
-        translator = self.TRANSLATIONS.get(self.locale, {})
+        translator = self._translator()
         dates = self._timeline(self._start(datetime(2025, 1, 1)))
 
         for i in range(self.num_records):
@@ -100,6 +160,7 @@ class Agribusiness(Leblanc):
                 'total_production_volume': round(float(total_production), 2),
                 'market_price_unit': price_unit,
                 'total_revenue': round(float(total_revenue), 2),
+                'customer_id': int(self.rng.integers(100, 9999)),
                 'farm_owner': self.fake.name()
             })
 
