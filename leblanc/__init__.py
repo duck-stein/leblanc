@@ -20,8 +20,14 @@ from .apparel import Apparel
 from .financial import Financial
 from .health_beauty import HealthBeauty
 from .forestry import Forestry
+from .healthcare import Healthcare
+from .logistics import Logistics
+from .education import Education
+from .energy import Energy
+from .real_estate import RealEstate
+from .relational import Customers, Warehouse
 
-__version__ = "0.9.0"
+__version__ = "1.0.0"
 
 SECTORS = {
     'agribusiness': Agribusiness,
@@ -31,6 +37,11 @@ SECTORS = {
     'financial': Financial,
     'healthbeauty': HealthBeauty,
     'forestry': Forestry,
+    'healthcare': Healthcare,
+    'logistics': Logistics,
+    'education': Education,
+    'energy': Energy,
+    'realestate': RealEstate,
 }
 
 

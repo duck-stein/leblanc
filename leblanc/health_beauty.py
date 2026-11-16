@@ -36,8 +36,61 @@ class HealthBeauty(Leblanc):
             'Anti-Frizz Shampoo': 'Shampoo Anti-Frizz', 'Lip Filler Session': 'Preenchimento Labial',
             'Deep Tissue Massage': 'Massagem Deep Tissue',
             'Online Store': 'Loja Online', 'Physical Store': 'Loja Física', 'Subscription': 'Assinatura'
+        },
+        'es_ES': {
+            'Skincare': 'Cuidado de la Piel',
+            'Supplements': 'Suplementos',
+            'Haircare': 'Cuidado del Cabello',
+            'Aesthetics': 'Estética',
+            'Wellness': 'Bienestar',
+            'Product': 'Producto',
+            'Service': 'Servicio',
+            'Hydrating Facial Cream': 'Crema Facial Hidratante',
+            'Whey Protein Isolate': 'Proteína Whey Aislada',
+            'Anti-Frizz Shampoo': 'Champú Anti-Frizz',
+            'Lip Filler Session': 'Sesión de Relleno de Labios',
+            'Deep Tissue Massage': 'Masaje de Tejido Profundo',
+            'Online Store': 'Tienda en Línea',
+            'Physical Store': 'Tienda Física',
+            'Subscription': 'Suscripción'
+        },
+        'hi_IN': {
+            'Skincare': 'त्वचा की देखभाल',
+            'Supplements': 'सप्लीमेंट्स',
+            'Haircare': 'बालों की देखभाल',
+            'Aesthetics': 'सौंदर्य उपचार',
+            'Wellness': 'वेलनेस',
+            'Product': 'उत्पाद',
+            'Service': 'सेवा',
+            'Hydrating Facial Cream': 'हाइड्रेटिंग फ़ेशियल क्रीम',
+            'Whey Protein Isolate': 'व्हे प्रोटीन आइसोलेट',
+            'Anti-Frizz Shampoo': 'एंटी-फ़्रिज़ शैम्पू',
+            'Lip Filler Session': 'लिप फ़िलर सेशन',
+            'Deep Tissue Massage': 'डीप टिशू मसाज',
+            'Online Store': 'ऑनलाइन स्टोर',
+            'Physical Store': 'भौतिक स्टोर',
+            'Subscription': 'सब्सक्रिप्शन'
+        },
+        'zh_CN': {
+            'Skincare': '护肤',
+            'Supplements': '营养补充剂',
+            'Haircare': '护发',
+            'Aesthetics': '医美',
+            'Wellness': '健康养生',
+            'Product': '产品',
+            'Service': '服务',
+            'Hydrating Facial Cream': '保湿面霜',
+            'Whey Protein Isolate': '分离乳清蛋白',
+            'Anti-Frizz Shampoo': '防毛躁洗发水',
+            'Lip Filler Session': '唇部填充疗程',
+            'Deep Tissue Massage': '深层组织按摩',
+            'Online Store': '线上商店',
+            'Physical Store': '实体店',
+            'Subscription': '订阅'
         }
     }
+
+    SEASONALITY = [1.2, 0.9, 1.0, 1.0, 1.3, 1.0, 1.0, 1.0, 1.0, 1.0, 1.2, 1.5]
 
     def get_metadata(self):
         return {"description": "Health, Beauty and Wellness services/products"}
@@ -46,7 +99,7 @@ class HealthBeauty(Leblanc):
         self._reset()
         data = []
         prod_list = list(self.PRODUCTS_HEALTH.keys())
-        translator = self.TRANSLATIONS.get(self.locale, {})
+        translator = self._translator()
         dates = self._timeline(self._start(datetime(2025, 11, 1)), span_days=120)
 
         for i in range(self.num_records):

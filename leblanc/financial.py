@@ -32,8 +32,44 @@ class Financial(Leblanc):
             'Checking Account': 'Conta Corrente', 'Mortgage': 'Financiamento Imobiliário',
             'Loan': 'Empréstimo', 'Service': 'Serviço',
             'Low': 'Baixo', 'Medium': 'Médio', 'High': 'Alto'
+        },
+        'es_ES': {
+            'Personal Loan': 'Préstamo Personal',
+            'Credit Card': 'Tarjeta de Crédito',
+            'Checking Account': 'Cuenta Corriente',
+            'Mortgage': 'Hipoteca',
+            'Loan': 'Préstamo',
+            'Service': 'Servicio',
+            'Low': 'Bajo',
+            'Medium': 'Medio',
+            'High': 'Alto'
+        },
+        'hi_IN': {
+            'Personal Loan': 'व्यक्तिगत ऋण',
+            'Credit Card': 'क्रेडिट कार्ड',
+            'Checking Account': 'चालू खाता',
+            'Mortgage': 'गृह ऋण',
+            'Loan': 'ऋण',
+            'Service': 'सेवा',
+            'Low': 'कम',
+            'Medium': 'मध्यम',
+            'High': 'उच्च'
+        },
+        'zh_CN': {
+            'Personal Loan': '个人贷款',
+            'Credit Card': '信用卡',
+            'Checking Account': '活期账户',
+            'Mortgage': '住房抵押贷款',
+            'Loan': '贷款',
+            'Service': '服务',
+            'Low': '低',
+            'Medium': '中',
+            'High': '高'
         }
     }
+
+    SEASONALITY = [1.4, 1.1, 1.0, 1.0, 1.0, 0.9, 0.9, 0.9, 0.9, 1.0, 1.1, 1.4]
+    CUSTOMER_ID = 'client_id'
 
     def get_metadata(self):
         return {"description": "Banking transactions and risk profiles"}
@@ -42,7 +78,7 @@ class Financial(Leblanc):
         self._reset()
         data = []
         prod_list = list(self.PRODUCTS_FINANCIAL.keys())
-        translator = self.TRANSLATIONS.get(self.locale, {})
+        translator = self._translator()
         dates = self._timeline(self._start(datetime(2025, 7, 1)), span_days=150)
         client_pool = max(100, self.num_records // 5)
 

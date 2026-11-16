@@ -35,8 +35,62 @@ class Forestry(Leblanc):
             'Eucalyptus Grandis': 'Eucalipto Grandis (Celulose)', 'Pinus Elliotti': 'Pinus (Serraria)',
             'Native Hardwood': 'Madeira de Lei (Manejo)', 'Biomass Wood': 'Madeira para Biomassa',
             'm3': 'm3', 'tons': 'toneladas'
+        },
+        'es_ES': {
+            'Eucalyptus': 'Eucalipto',
+            'Pinus': 'Pino',
+            'Native': 'Nativa',
+            'Intensive': 'Intensivo',
+            'Sustainable': 'Sostenible',
+            'Reforestation': 'Reforestación',
+            'Northern': 'Norte',
+            'Southern': 'Sur',
+            'Coastal': 'Costa',
+            'Eucalyptus Grandis': 'Eucalipto Grandis (Celulosa)',
+            'Pinus Elliotti': 'Pino Elliottii (Aserradero)',
+            'Native Hardwood': 'Madera Dura Nativa (Manejo)',
+            'Biomass Wood': 'Madera para Biomasa',
+            'm3': 'm3',
+            'tons': 'toneladas'
+        },
+        'hi_IN': {
+            'Eucalyptus': 'यूकेलिप्टस',
+            'Pinus': 'चीड़',
+            'Native': 'देशी',
+            'Intensive': 'गहन',
+            'Sustainable': 'टिकाऊ',
+            'Reforestation': 'पुनर्वनीकरण',
+            'Northern': 'उत्तरी',
+            'Southern': 'दक्षिणी',
+            'Coastal': 'तटीय',
+            'Eucalyptus Grandis': 'यूकेलिप्टस ग्रैंडिस (लुगदी)',
+            'Pinus Elliotti': 'पाइनस एलियोटी (आरा मिल)',
+            'Native Hardwood': 'देशी कठोर लकड़ी (प्रबंधित)',
+            'Biomass Wood': 'बायोमास लकड़ी',
+            'm3': 'm3',
+            'tons': 'टन'
+        },
+        'zh_CN': {
+            'Eucalyptus': '桉树',
+            'Pinus': '松树',
+            'Native': '本地树种',
+            'Intensive': '集约经营',
+            'Sustainable': '可持续经营',
+            'Reforestation': '再造林',
+            'Northern': '北部',
+            'Southern': '南部',
+            'Coastal': '沿海',
+            'Eucalyptus Grandis': '巨桉(纸浆)',
+            'Pinus Elliotti': '湿地松(锯材)',
+            'Native Hardwood': '本地硬木(经营)',
+            'Biomass Wood': '生物质木材',
+            'm3': '立方米',
+            'tons': '吨'
         }
     }
+
+    SEASONALITY = [0.7, 0.7, 0.8, 1.0, 1.1, 1.4, 1.6, 1.6, 1.4, 1.0, 0.8, 0.7]
+    CUSTOMER_NAME = 'owner_name'
 
     def get_metadata(self):
         return {"description": "Forestry inventory and harvest data"}
@@ -45,7 +99,7 @@ class Forestry(Leblanc):
         self._reset()
         data = []
         prod_list = list(self.PRODUCTS_FORESTRY.keys())
-        translator = self.TRANSLATIONS.get(self.locale, {})
+        translator = self._translator()
         dates = self._timeline(self._start(datetime(2025, 1, 1)))
 
         for i in range(self.num_records):
@@ -72,6 +126,7 @@ class Forestry(Leblanc):
                 'volume_unit': translator.get(info['unit'], info['unit']),
                 'total_estimated_volume': round(float(total_vol), 2),
                 'estimated_revenue': round(float(revenue), 2),
+                'customer_id': int(self.rng.integers(100, 9999)),
                 'owner_name': self.fake.name()
             })
 

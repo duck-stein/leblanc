@@ -32,8 +32,44 @@ class Food(Leblanc):
             'Whole Milk 1L': 'Leite Integral 1L', 'Roasted Coffee 500g': 'Café Torrado 500g',
             'Beef Tenderloin (kg)': 'Filé Mignon (kg)', 'Craft Beer 6-pack': 'Cerveja Artesanal 6-pack',
             'Parboiled Rice 5kg': 'Arroz Parboilizado 5kg'
+        },
+        'es_ES': {
+            'Dairy': 'Lácteos',
+            'Grocery': 'Abarrotes',
+            'Meat': 'Carnes',
+            'Beverages': 'Bebidas',
+            'Whole Milk 1L': 'Leche Entera 1L',
+            'Roasted Coffee 500g': 'Café Tostado 500g',
+            'Beef Tenderloin (kg)': 'Solomillo de Res (kg)',
+            'Craft Beer 6-pack': 'Cerveza Artesanal 6 unidades',
+            'Parboiled Rice 5kg': 'Arroz Vaporizado 5kg'
+        },
+        'hi_IN': {
+            'Dairy': 'डेयरी',
+            'Grocery': 'किराना',
+            'Meat': 'मांस',
+            'Beverages': 'पेय पदार्थ',
+            'Whole Milk 1L': 'पूर्ण क्रीम दूध 1L',
+            'Roasted Coffee 500g': 'भुनी हुई कॉफ़ी 500g',
+            'Beef Tenderloin (kg)': 'बीफ़ टेंडरलॉइन (किग्रा)',
+            'Craft Beer 6-pack': 'क्राफ़्ट बीयर 6 का पैक',
+            'Parboiled Rice 5kg': 'पारबॉइल्ड चावल 5किग्रा'
+        },
+        'zh_CN': {
+            'Dairy': '乳制品',
+            'Grocery': '杂货',
+            'Meat': '肉类',
+            'Beverages': '饮料',
+            'Whole Milk 1L': '全脂牛奶1升',
+            'Roasted Coffee 500g': '烘焙咖啡500克',
+            'Beef Tenderloin (kg)': '牛里脊(公斤)',
+            'Craft Beer 6-pack': '精酿啤酒6瓶装',
+            'Parboiled Rice 5kg': '蒸谷米5公斤'
         }
     }
+
+    SEASONALITY = [1.0, 0.9, 0.9, 1.0, 1.0, 1.0, 1.1, 1.0, 1.0, 1.0, 1.1, 1.6]
+    CUSTOMER_NAME = 'customer_name'
 
     def get_metadata(self):
         return {"description": "Food and Beverages retail sales", "products": list(self.PRODUCTS_FOOD.keys())}
@@ -42,7 +78,7 @@ class Food(Leblanc):
         self._reset()
         sales_data = []
         product_list = list(self.PRODUCTS_FOOD.keys())
-        translator = self.TRANSLATIONS.get(self.locale, {})
+        translator = self._translator()
         dates = self._timeline(self._start(datetime(2025, 10, 1)), span_days=150)
 
         for i in range(self.num_records):
@@ -68,6 +104,7 @@ class Food(Leblanc):
                 'quantity': quantity,
                 'total_sale': round(unit_price * quantity, 2),
                 'expiration_date': order_date + timedelta(days=validity_days),
+                'customer_id': int(self.rng.integers(100, 9999)),
                 'customer_name': self.fake.name(),
                 'delivery_zipcode': self.fake.postcode()
             })
