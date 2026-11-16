@@ -13,12 +13,11 @@
 # limitations under the License.
 
 from .base import Leblanc
-from datetime import datetime, timedelta
-import numpy as np
-import random
+from datetime import datetime
+
 
 class HealthBeauty(Leblanc):
-    
+
     PRODUCTS_HEALTH = {
         'Hydrating Facial Cream': {'type': 'Product', 'category': 'Skincare', 'price': 85.00, 'recurrence': 60},
         'Whey Protein Isolate': {'type': 'Product', 'category': 'Supplements', 'price': 150.00, 'recurrence': 45},
@@ -43,40 +42,32 @@ class HealthBeauty(Leblanc):
     def get_metadata(self):
         return {"description": "Health, Beauty and Wellness services/products"}
 
-    def build(self, missing_data_cols=None):
+    def build(self, missing_data_cols=None, missing_rate=0.05, outlier_cols=None, duplicate_rate=0.0):
+        self._reset()
         data = []
         prod_list = list(self.PRODUCTS_HEALTH.keys())
-        start_date = datetime(2025, 11, 1)
         translator = self.TRANSLATIONS.get(self.locale, {})
+        dates = self._timeline(self._start(datetime(2025, 11, 1)), span_days=120)
 
         for i in range(self.num_records):
-            raw_prod = random.choice(prod_list)
+            raw_prod = self.py_rng.choice(prod_list)
             info = self.PRODUCTS_HEALTH[raw_prod]
-            raw_channel = random.choice(self.CHANNELS)
+            raw_channel = self.py_rng.choice(self.CHANNELS)
             unit_price = info['price']
             if raw_channel == 'Subscription':
-                unit_price *= 0.90
-            
-            days_next = info['recurrence'] + np.random.randint(-15, 15)
-            product = translator.get(raw_prod, raw_prod)
-            cat = translator.get(info['category'], info['category'])
-            typ = translator.get(info['type'], info['type'])
-            channel = translator.get(raw_channel, raw_channel)
+                unit_price = round(unit_price * 0.90, 2)
 
             data.append({
                 'transaction_id': 8000 + i,
-                'transaction_date': start_date + timedelta(days=np.random.randint(1, 120)),
-                'item_name': product,
-                'type': typ,
-                'category': cat,
-                'unit_price': round(unit_price, 2),
-                'quantity': np.random.randint(1, 4) if info['type'] == 'Product' else 1,
-                'sales_channel': channel,
-                'days_until_next_purchase': days_next,
-                'customer_id': np.random.randint(1000, 9999)
+                'transaction_date': dates[i],
+                'item_name': translator.get(raw_prod, raw_prod),
+                'type': translator.get(info['type'], info['type']),
+                'category': translator.get(info['category'], info['category']),
+                'unit_price': unit_price,
+                'quantity': int(self.rng.integers(1, 4)) if info['type'] == 'Product' else 1,
+                'sales_channel': translator.get(raw_channel, raw_channel),
+                'days_until_next_purchase': info['recurrence'] + int(self.rng.integers(-15, 15)),
+                'customer_id': int(self.rng.integers(1000, 9999))
             })
 
-        df = self._create_dataframe(data, "Health & Beauty")
-        if missing_data_cols:
-            df = self.inject_missing_values(df, missing_data_cols)
-        return df
+        return self._finalize(data, "Health & Beauty", missing_data_cols, missing_rate, outlier_cols, duplicate_rate)

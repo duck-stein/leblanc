@@ -1,41 +1,45 @@
-# Copyright 2025 w.Sanice
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+import re
+from pathlib import Path
 
 from setuptools import setup, find_packages
 
+version = re.search(
+    r'__version__\s*=\s*"([^"]+)"',
+    Path('leblanc/__init__.py').read_text(encoding='utf-8'),
+).group(1)
+
 setup(
     name='leblanc',
-    version='0.6.3',
-    packages=find_packages(),
+    version=version,
+    packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
-        'pandas>=1.0.0',
-        'numpy>=1.18.0',
+        'pandas>=1.3.0',
+        'numpy>=1.20.0',
         'Faker>=18.0.0',
     ],
+    extras_require={
+        'parquet': ['pyarrow'],
+        'dev': ['pytest', 'pyarrow'],
+    },
+    entry_points={'console_scripts': ['leblanc=leblanc.__main__:main']},
     author='wSanice',
     author_email='wansanice@proton.me',
     description='A Python library to generate various synthetic DataFrames for different business sectors (Tech, Food, Finance, Apparel, forestry, etc.).',
-    long_description=open('README.md', encoding='utf-8').read(),
+    long_description=Path('README.md').read_text(encoding='utf-8'),
     long_description_content_type='text/markdown',
-    url='https://github.com/wSanice/leblanc',
+    url='https://github.com/duck-stein/leblanc',
     license='Apache 2.0',
     classifiers=[
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Information Analysis'
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.9',
 )

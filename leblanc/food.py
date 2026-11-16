@@ -14,11 +14,10 @@
 
 from .base import Leblanc
 from datetime import datetime, timedelta
-import numpy as np
-import random
+
 
 class Food(Leblanc):
-    
+
     PRODUCTS_FOOD = {
         'Whole Milk 1L': {'category': 'Dairy', 'price': 5.50, 'perishable': True},
         'Roasted Coffee 500g': {'category': 'Grocery', 'price': 18.00, 'perishable': False},
@@ -39,41 +38,38 @@ class Food(Leblanc):
     def get_metadata(self):
         return {"description": "Food and Beverages retail sales", "products": list(self.PRODUCTS_FOOD.keys())}
 
-    def build(self, missing_data_cols=None):
+    def build(self, missing_data_cols=None, missing_rate=0.05, outlier_cols=None, duplicate_rate=0.0):
+        self._reset()
         sales_data = []
         product_list = list(self.PRODUCTS_FOOD.keys())
-        start_date = datetime(2025, 10, 1)
         translator = self.TRANSLATIONS.get(self.locale, {})
+        dates = self._timeline(self._start(datetime(2025, 10, 1)), span_days=150)
 
         for i in range(self.num_records):
-            raw_prod = random.choice(product_list)
+            raw_prod = self.py_rng.choice(product_list)
             info = self.PRODUCTS_FOOD[raw_prod]
-            order_date = start_date + timedelta(days=np.random.randint(1, 150), hours=np.random.randint(0, 23))
+            order_date = dates[i]
             base_price = info['price']
-            if info['perishable'] and np.random.rand() < 0.15:
+            if info['perishable'] and self.rng.random() < 0.15:
                 unit_price = base_price * 0.80
             else:
-                unit_price = base_price * np.random.uniform(0.95, 1.05)
-            
-            validity_days = np.random.randint(3, 30 if info['perishable'] else 365)
-            expiration_date = order_date + timedelta(days=validity_days)
-            product_name = translator.get(raw_prod, raw_prod)
-            category = translator.get(info['category'], info['category'])
+                unit_price = base_price * self.rng.uniform(0.95, 1.05)
+            unit_price = round(float(unit_price), 2)
+            quantity = int(self.rng.integers(1, 20))
+
+            validity_days = int(self.rng.integers(3, 30 if info['perishable'] else 365))
 
             sales_data.append({
                 'transaction_id': 5000 + i,
                 'order_date': order_date,
-                'product': product_name,
-                'category': category,
-                'unit_price': round(unit_price, 2),
-                'quantity': np.random.randint(1, 20),
-                'total_sale': round(unit_price * np.random.randint(1, 20), 2),
-                'expiration_date': expiration_date,
+                'product': translator.get(raw_prod, raw_prod),
+                'category': translator.get(info['category'], info['category']),
+                'unit_price': unit_price,
+                'quantity': quantity,
+                'total_sale': round(unit_price * quantity, 2),
+                'expiration_date': order_date + timedelta(days=validity_days),
                 'customer_name': self.fake.name(),
                 'delivery_zipcode': self.fake.postcode()
             })
 
-        df = self._create_dataframe(sales_data, "Food and Beverages")
-        if missing_data_cols:
-            df = self.inject_missing_values(df, missing_data_cols)
-        return df
+        return self._finalize(sales_data, "Food and Beverages", missing_data_cols, missing_rate, outlier_cols, duplicate_rate)

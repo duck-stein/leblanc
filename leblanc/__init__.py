@@ -21,4 +21,25 @@ from .financial import Financial
 from .health_beauty import HealthBeauty
 from .forestry import Forestry
 
-__version__ = "0.8.0"
+__version__ = "0.9.0"
+
+SECTORS = {
+    'agribusiness': Agribusiness,
+    'tech': Tech,
+    'food': Food,
+    'apparel': Apparel,
+    'financial': Financial,
+    'healthbeauty': HealthBeauty,
+    'forestry': Forestry,
+}
+
+
+def list_sectors():
+    return sorted(SECTORS)
+
+
+def get_sector(name):
+    key = str(name).replace('_', '').replace('-', '').replace(' ', '').lower()
+    if key not in SECTORS:
+        raise ValueError(f"Unknown sector '{name}'. Available: {list_sectors()}")
+    return SECTORS[key]

@@ -2,7 +2,7 @@ venv/
 env/
 .env
 .venv/
-pycache/
+__pycache__/
 *.py[cod]
 *$py.class
 dist/
@@ -11,4 +11,4 @@ build/
 .vscode/
 .idea/
 /leblanc.egg-info/
-__pycache__/
+__pycache__/.pytest_cache/

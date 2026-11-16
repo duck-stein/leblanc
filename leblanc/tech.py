@@ -13,9 +13,8 @@
 # limitations under the License.
 
 from .base import Leblanc
-from datetime import datetime, timedelta
-import numpy as np
-import random
+from datetime import datetime
+
 
 class Tech(Leblanc):
     PRODUCTS_TECH = {
@@ -28,14 +27,15 @@ class Tech(Leblanc):
         'Video Card': {'category': 'Hardware', 'price': 4500.00},
         'SSD 1TB': {'category': 'Hardware', 'price': 600.00}
     }
-    
+
     TRANSLATIONS = {
         'pt_BR': {
-            'Electronics': 'Eletrônicos', 'Accessories': 'Acessórios', 
+            'Electronics': 'Eletrônicos', 'Accessories': 'Acessórios',
             'Furniture': 'Mobiliário', 'Hardware': 'Hardware',
             'Gaming Laptop': 'Notebook Gamer', 'Vertical Mouse': 'Mouse Vertical',
             'Mechanical Keyboard': 'Teclado Mecânico', 'Ultrawide Monitor': 'Monitor Ultrawide',
-            'Gaming Chair': 'Cadeira Gamer', 'Video Card': 'Placa de Vídeo'
+            'Gaming Chair': 'Cadeira Gamer', 'Headset 7.1': 'Fone de Ouvido 7.1',
+            'Video Card': 'Placa de Vídeo'
         }
     }
 
@@ -45,48 +45,34 @@ class Tech(Leblanc):
             "products_count": len(self.PRODUCTS_TECH)
         }
 
-    def build(self, missing_data_cols=None):
+    def build(self, missing_data_cols=None, missing_rate=0.05, outlier_cols=None, duplicate_rate=0.0):
+        self._reset()
         sales_data = []
         product_list = list(self.PRODUCTS_TECH.keys())
-        start_date = datetime(2026, 1, 1)
         translator = self.TRANSLATIONS.get(self.locale, {})
+        dates = self._timeline(self._start(datetime(2026, 1, 1)))
 
         for i in range(self.num_records):
-            raw_product_name = random.choice(product_list)
+            raw_product_name = self.py_rng.choice(product_list)
             product_info = self.PRODUCTS_TECH[raw_product_name]
-            quantity = np.random.randint(1, 8)
-            days_offset = int(i / 5) * random.randint(1, 3)
-            order_date = start_date + timedelta(days=days_offset, hours=random.randint(0, 23))
+            quantity = int(self.rng.integers(1, 8))
 
             if raw_product_name in ['Vertical Mouse', 'Mechanical Keyboard']:
-                unit_price = product_info['price'] * np.random.uniform(0.9, 1.0)
+                unit_price = round(float(product_info['price'] * self.rng.uniform(0.9, 1.0)), 2)
             else:
                 unit_price = product_info['price']
 
-            product_name = translator.get(raw_product_name, raw_product_name)
-            category = translator.get(product_info['category'], product_info['category'])
-            customer_info = {
-                'id': np.random.randint(100, 9999),
-                'city': self.fake.city(),
-                'state': self.fake.state_abbr()
-            }
-
             sales_data.append({
                 'order_id': 1000 + i,
-                'order_date': order_date,
-                'product_name': product_name,
-                'category': category,
-                'unit_price': round(unit_price, 2),
+                'order_date': dates[i],
+                'product_name': translator.get(raw_product_name, raw_product_name),
+                'category': translator.get(product_info['category'], product_info['category']),
+                'unit_price': unit_price,
                 'quantity': quantity,
                 'total_sale': round(unit_price * quantity, 2),
-                'customer_id': customer_info['id'],
-                'city': customer_info['city'],
-                'state': customer_info['state']
+                'customer_id': int(self.rng.integers(100, 9999)),
+                'city': self.fake.city(),
+                'state': self.fake.state_abbr()
             })
-        
-        df = self._create_dataframe(sales_data, "Technology Sales")
 
-        if missing_data_cols:
-            df = self.inject_missing_values(df, missing_data_cols)
-
-        return df
+        return self._finalize(sales_data, "Technology Sales", missing_data_cols, missing_rate, outlier_cols, duplicate_rate)

@@ -13,11 +13,10 @@
 # limitations under the License.
 
 from .base import Leblanc
-from datetime import datetime, timedelta
-import numpy as np
-import random
+from datetime import datetime
 
-class Agribusiness(Leblanc): 
+
+class Agribusiness(Leblanc):
     CROPS_INFO = {
         'Soybean': {'type': 'Grain', 'price_per_ton': 1800, 'yield_base': 3500},
         'Corn': {'type': 'Grain', 'price_per_ton': 900, 'yield_base': 6000},
@@ -44,73 +43,64 @@ class Agribusiness(Leblanc):
             "crops_available": list(self.CROPS_INFO.keys())
         }
 
-    def build(self, missing_data_cols=None):
-        start_date = datetime(2025, 1, 1)
+    def build(self, missing_data_cols=None, missing_rate=0.05, outlier_cols=None, duplicate_rate=0.0):
+        self._reset()
         agri_data = []
         crop_list = list(self.CROPS_INFO.keys())
         translator = self.TRANSLATIONS.get(self.locale, {})
+        dates = self._timeline(self._start(datetime(2025, 1, 1)))
 
         for i in range(self.num_records):
-            raw_item_name = random.choice(crop_list)
-            item_info = self.CROPS_INFO[raw_item_name]            
-            raw_climate = random.choice(self.CLIMATE_CONDITIONS)
-            raw_region = random.choice(self.REGIONS)
+            raw_item_name = self.py_rng.choice(crop_list)
+            item_info = self.CROPS_INFO[raw_item_name]
+            raw_climate = self.py_rng.choice(self.CLIMATE_CONDITIONS)
+            raw_region = self.py_rng.choice(self.REGIONS)
             climate_factor = {'Ideal': 1.1, 'Normal': 1.0, 'Drought': 0.7, 'Excess Rain': 0.85}[raw_climate]
             base_yield = item_info['yield_base']
-            area_hectares = np.random.uniform(50, 2000)            
-            total_production = 0
-            total_revenue = 0
+            area_hectares = float(self.rng.uniform(50, 2000))
+            total_production = 0.0
+            total_revenue = 0.0
             unit = ''
             price_unit = 0
 
             if item_info['type'] in ['Grain', 'Permanent Crop']:
-                final_yield = base_yield * climate_factor * np.random.uniform(0.9, 1.1)
+                final_yield = base_yield * climate_factor * self.rng.uniform(0.9, 1.1)
                 total_production = final_yield * area_hectares
                 unit = 'kg' if item_info['type'] == 'Grain' else 'bags'
-                
+
                 if item_info['type'] == 'Grain':
                     price_unit = item_info.get('price_per_ton', 0)
                     total_revenue = (total_production / 1000) * price_unit
                 else:
                     price_unit = item_info.get('price_per_bag', 0)
                     total_revenue = total_production * price_unit
-            
+
             elif item_info['type'] == 'Livestock':
-                num_animals = np.random.randint(50, 1000)
-                avg_weight = np.random.uniform(400, 600)
+                num_animals = int(self.rng.integers(50, 1000))
+                avg_weight = float(self.rng.uniform(400, 600))
                 total_production = num_animals * avg_weight
                 unit = 'kg'
                 price_unit = item_info.get('price_per_arroba', 0)
                 total_revenue = (total_production / 15) * price_unit
-                
+
             elif item_info['type'] == 'Input':
-                total_production = np.random.uniform(10, 500)
+                total_production = float(self.rng.uniform(10, 500))
                 unit = 'tons'
                 price_unit = item_info.get('price_per_ton', 0)
-                total_revenue = 0
-
-            item_name = translator.get(raw_item_name, raw_item_name)
-            item_type = translator.get(item_info['type'], item_info['type'])
-            climate = translator.get(raw_climate, raw_climate)
-            region = translator.get(raw_region, raw_region)
-            owner_name = self.fake.name()
 
             agri_data.append({
                 'record_id': 9000 + i,
-                'record_date': start_date + timedelta(days=np.random.randint(1, 365)),
-                'item_name': item_name,
-                'type': item_type,
-                'region': region,
+                'record_date': dates[i],
+                'item_name': translator.get(raw_item_name, raw_item_name),
+                'type': translator.get(item_info['type'], item_info['type']),
+                'region': translator.get(raw_region, raw_region),
                 'area_hectares': round(area_hectares, 2),
-                'climate_condition': climate,
+                'climate_condition': translator.get(raw_climate, raw_climate),
                 'production_unit': unit,
-                'total_production_volume': round(total_production, 2),
+                'total_production_volume': round(float(total_production), 2),
                 'market_price_unit': price_unit,
-                'total_revenue': round(total_revenue, 2),
-                'farm_owner': owner_name
+                'total_revenue': round(float(total_revenue), 2),
+                'farm_owner': self.fake.name()
             })
-        df = self._create_dataframe(agri_data, "Agribusiness")
-        if missing_data_cols:
-            df = self.inject_missing_values(df, missing_data_cols)
-            
-        return df
+
+        return self._finalize(agri_data, "Agribusiness", missing_data_cols, missing_rate, outlier_cols, duplicate_rate)
